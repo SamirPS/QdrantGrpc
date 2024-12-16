@@ -127,7 +127,7 @@ public class QdrantCollectionSimulation extends Simulation {
                             .check(
                                     response(SnapshotsService.ListSnapshotsResponse::getSnapshotDescriptionsList)
                                             .transform(
-                                                    res -> res.size()
+                                                    List::size
                                             )
                                             .is(1)
                             )
@@ -141,9 +141,21 @@ public class QdrantCollectionSimulation extends Simulation {
                                     .build())
                     .check(
                             response(Points.CountResponse::getResult)
-                                    .transform(res -> res.getCount())
+                                    .transform(Points.CountResult::getCount)
                                     .is(5L)
                     )
+            )
+            .exec(
+                    grpc("Collection exist")
+                            .unary(CollectionsGrpc.getCollectionExistsMethod())
+                            .send(session -> Collections.CollectionExistsRequest.newBuilder().
+                                    setCollectionName(session.getString("collectionName"))
+                                    .build())
+                            .check(
+                                    response(Collections.CollectionExistsResponse::getResult)
+                                            .transform(Collections.CollectionExists::getExists)
+                                            .is(true)
+                            )
             );
 
     // ./mvnw gatling:test -Dgatling.simulationClass=io.gatling.grpc.demo.GreetingSimulation
